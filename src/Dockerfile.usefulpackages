@@ -2,19 +2,29 @@ LABEL authors="Christoph Schranz <christoph.schranz@salzburgresearch.at>, Mathem
 
 USER root
 
-RUN pip install --no-cache-dir ipyleaflet plotly==4.8.* "ipywidgets>=7.5"
+RUN pip install --no-cache-dir ipyleaflet \
+  plotly==4.8.* "ipywidgets>=7.5" \
+  black==20.8b1 nbqa nbdev pre-commit \
+  python-language-server[all]
 
 # Install important packages and Graphviz
 RUN set -ex \
- && buildDeps=' \
-    graphviz==0.11 \
-' \
- && apt-get update \
- && apt-get -y install htop apt-utils graphviz libgraphviz-dev openssh-client \
- && pip install --no-cache-dir $buildDeps
+  && buildDeps=' \
+  graphviz==0.11 \
+  ' \
+  && apt-get update \
+  && apt-get -y install htop apt-utils graphviz libgraphviz-dev openssh-client \
+  && pip install --no-cache-dir $buildDeps
 
 # Install various extensions
 RUN fix-permissions $CONDA_DIR
+RUN conda install --quiet --yes \
+  'jupyterlab=2.2.0' \
+  'nodejs >=10.12,<15' \
+  'jupyter-lsp-python=0.9.3' && \
+  conda clean --all -f -y && \
+  npm cache clean --force
+RUN jupyter labextension install '@krassowski/jupyterlab-lsp@2.1.2'
 RUN jupyter labextension install @jupyterlab/github
 RUN jupyter labextension install jupyterlab-drawio
 RUN jupyter labextension install jupyter-leaflet
